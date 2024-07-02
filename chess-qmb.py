@@ -139,7 +139,7 @@ def generate_wf():
     stack2_nxs = File("Stack2.nxs")
     stack3_nxs = File("Stack3.nxs")
     stack_em_all_cbf_job = Job('stack_em_all_cbf', node_label="stack_em_all _cbf_2023")
-    stack_em_all_cbf_job.add_args("-a stack -T60 -i ")
+    stack_em_all_cbf_job.add_args("-a stack -T60 -i")
     for scan_file in scan_files:
         stack_em_all_cbf_job.add_args(scan_file)
         stack_em_all_cbf_job.add_inputs(scan_file)
