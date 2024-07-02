@@ -43,6 +43,7 @@ def generate_wf():
     # data to the Pegasus developers
     props = Properties()
     props['pegasus.catalog.workflow.amqp.url'] = 'amqp://friend:donatedata@msgs.pegasus.isi.edu:5672/prod/workflows'
+    props['pegasus.mode'] = 'development'
     #props['pegasus.data.configuration'] = 'nonsharedfs'
     props.write() 
     
