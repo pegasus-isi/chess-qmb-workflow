@@ -144,14 +144,14 @@ def generate_wf():
     for scan_file in scan_files:
         stack_em_all_cbf_job.add_args(scan_file)
         stack_em_all_cbf_job.add_inputs(scan_file)
+    stack_em_all_cbf_job.add_args("-o", stack1_nxs, stack2_nxs, stack3_nxs)
     stack_em_all_cbf_job.add_outputs(stack1_nxs, stack2_nxs, stack3_nxs, stage_out=True)
     wf.add_jobs(stack_em_all_cbf_job)
 
     # simple peakfinder job
     peaklist1_nxs = File("Peaklist1.nxs")
     simple_peakfinder_job = Job('simple_peakfinder', node_label="simple_peakfinder")
-    simple_peakfinder_job.add_args("-a simple_peakfinder -T60 -i")
-    simple_peakfinder_job.add_args(stack1_nxs)
+    simple_peakfinder_job.add_args("-a simple_peakfinder -T60 -i", stack1_nxs, "-o", peaklist1_nxs)
     simple_peakfinder_job.add_inputs(stack1_nxs)
     simple_peakfinder_job.add_outputs(peaklist1_nxs, stage_out=True)
     wf.add_jobs(simple_peakfinder_job)
@@ -159,8 +159,7 @@ def generate_wf():
     # auto orm finder job
     ormatrix_v1_nxs = File("ormatrix_v1.nxs")
     auto_ormfinder_job = Job('auto_ormfinder', node_label="auto_ormfinder")
-    auto_ormfinder_job.add_args("-a auto_ormfinder -T60 -i")
-    auto_ormfinder_job.add_args(peaklist1_nxs)
+    auto_ormfinder_job.add_args("-a auto_ormfinder -T60 -i", peaklist1_nxs, "-o", ormatrix_v1_nxs)
     auto_ormfinder_job.add_inputs(peaklist1_nxs)
     auto_ormfinder_job.add_outputs(ormatrix_v1_nxs, stage_out=True)
     wf.add_jobs(auto_ormfinder_job)
@@ -172,7 +171,8 @@ def generate_wf():
     pil6M_hkl_conv_job.add_args("-a pil6M_hkl_conv -T60 -i")
     for file in [stack1_nxs, stack2_nxs, stack3_nxs, ormatrix_v1_nxs]:
         pil6M_hkl_conv_job.add_args(file)
-    pil6M_hkl_conv_job.add_outputs(three_scans_hkli_nxs)
+    pil6M_hkl_conv_job.add_args("-o", three_scans_hkli_nxs)
+    pil6M_hkl_conv_job.add_outputs(three_scans_hkli_nxs, stage_out=True)
     wf.add_jobs(pil6M_hkl_conv_job)
 
     # add dependencies explicitly to connect the j
