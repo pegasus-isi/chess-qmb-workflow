@@ -21,6 +21,7 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 # need to know where Pegasus is installed for notifications
 PEGASUS_HOME = shutil.which('pegasus-version')
 PEGASUS_HOME = os.path.dirname(os.path.dirname(PEGASUS_HOME))
+CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/pegasus-5.0.7dev"
 
 def generate_wf():
     '''
@@ -56,33 +57,33 @@ def generate_wf():
 
     stack_em_all_cbf = Transformation(
         'stack_em_all_cbf',
-        site='local',
-        pfn=PEGASUS_HOME + '/bin/pegasus-keg',
-        is_stageable=True
+        site='sge',
+        pfn=CLUSTER_PEGASUS_HOME + '/bin/pegasus-keg',
+        is_stageable=False
     )
     tc.add_transformations(stack_em_all_cbf)
 
     simple_peakfinder = Transformation(
         'simple_peakfinder',
-        site='local',
-        pfn=PEGASUS_HOME + '/bin/pegasus-keg',
-        is_stageable=True
+        site='sge',
+        pfn=CLUSTER_PEGASUS_HOME + '/bin/pegasus-keg',
+        is_stageable=False
     )
     tc.add_transformations(simple_peakfinder)
 
     auto_ormfinder = Transformation(
         'auto_ormfinder',
-        site='local',
-        pfn=PEGASUS_HOME + '/bin/pegasus-keg',
-        is_stageable=True
+        site='sge',
+        pfn=CLUSTER_PEGASUS_HOME + '/bin/pegasus-keg',
+        is_stageable=False
     )
     tc.add_transformations(auto_ormfinder)
 
     pil6M_hkl_conv = Transformation(
         'pil6M_hkl_conv',
-        site='local',
-        pfn=PEGASUS_HOME + '/bin/pegasus-keg',
-        is_stageable=True
+        site='sge',
+        pfn=CLUSTER_PEGASUS_HOME + '/bin/pegasus-keg',
+        is_stageable=False
     )
     tc.add_transformations(pil6M_hkl_conv)
 
