@@ -131,10 +131,28 @@ def generate_wf():
     executables_dir = os.path.join(BASE_DIR, "executables")
     input_dir = os.path.join(BASE_DIR, "input")
     scan_files=[]
-    for i in range(1,4):
-        scan_file = File("raw_data_scan_{}".format(i))
-        scan_files.append(scan_file)
-        rc.add_replica("local", scan_file, os.path.join(input_dir,scan_file.lfn))
+    for fname in os.listdir(input_dir):
+        if fname[0] == '.':
+            continue
+
+        folder = os.path.join(input_dir, fname)
+        prefix = fname
+        if os.path.isdir(folder):
+            for f in os.listdir(folder):
+                if f == '.':
+                    continue
+
+                file_path = os.path.join(folder, f)
+                if os.path.isfile(file_path):
+                    scan_file = File(prefix + "/" + f)
+                    scan_files.append(scan_file)
+                    rc.add_replica("local", scan_file, file_path)
+
+    # sanity check. make sure scan files were found
+    if len(scan_files) == 0:
+        logging.error("No scan files found in {}".format(input_dir))
+        sys.exit(1)
+
 
     # stack_em_all_cbf job
     stack1_nxs = File("Stack1.nxs")
