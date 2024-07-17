@@ -23,6 +23,51 @@ PEGASUS_HOME = shutil.which('pegasus-version')
 PEGASUS_HOME = os.path.dirname(os.path.dirname(PEGASUS_HOME))
 CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/pegasus-5.0.7dev"
 
+def build_site_catalog():
+    '''
+    Builds the Site Catalog that tells Pegasus what cluster layout looks like
+    
+    :return: the Site Catalog
+    '''
+
+    # --- Site Catalog -------------------------------------------------
+    sc = SiteCatalog()
+
+    # add a local site with an optional job env file to use for compute jobs
+    shared_scratch_dir = "{}/local/scratch".format(BASE_DIR)
+    local_storage_dir = "{}/local/storage".format(BASE_DIR)
+    local = Site("local") \
+        .add_directories(
+        Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
+        .add_file_servers(FileServer("file://" + shared_scratch_dir, Operation.ALL)),
+        Directory(Directory.LOCAL_STORAGE, local_storage_dir)
+        .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL)))
+
+    sc.add_sites(local)
+
+    # add a sge site for CHESS SGE Cluster
+    cluster_name = "sge"
+    shared_scratch_dir = "{}/sge/scratch".format(BASE_DIR)
+    local_storage_dir = "{}/sge/storage".format(BASE_DIR)
+    sge = Site(cluster_name) \
+        .add_directories(
+        Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
+        .add_file_servers(
+            FileServer("file://" + shared_scratch_dir, Operation.ALL))) \
+        .add_condor_profile(grid_resource="batch sge") \
+        .add_pegasus_profile(
+        style="glite",
+        queue="all.q",
+        data_configuration="nonsharedfs",
+        auxillary_local="true",
+        nodes=1,
+        ppn=1,
+        runtime=1800,
+        clusters_num=2
+    )
+    sc.add_sites(sge)
+    return sc
+
 def generate_wf():
     '''
     Main function that parses arguments and generates the pegasus
@@ -35,8 +80,10 @@ def generate_wf():
     args = parser.parse_args(sys.argv[1:])
     
     wf = Workflow('chess-qmb')
+    sc = build_site_catalog()
     tc = TransformationCatalog()
     rc = ReplicaCatalog()
+
     
     # --- Properties ----------------------------------------------------------
     
@@ -87,43 +134,7 @@ def generate_wf():
     )
     tc.add_transformations(pil6M_hkl_conv)
 
-    # --- Site Catalog -------------------------------------------------
-    sc = SiteCatalog()
 
-    # add a local site with an optional job env file to use for compute jobs
-    shared_scratch_dir = "{}/local/scratch".format(BASE_DIR)
-    local_storage_dir = "{}/local/storage".format(BASE_DIR)
-    local = Site("local") \
-        .add_directories(
-        Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
-            .add_file_servers(FileServer("file://" + shared_scratch_dir, Operation.ALL)),
-        Directory(Directory.LOCAL_STORAGE, local_storage_dir)
-            .add_file_servers(FileServer("file://" + local_storage_dir, Operation.ALL)))
-
-
-    sc.add_sites(local)
-
-    # add a sge site for CHESS SGE Cluster
-    cluster_name = "sge"
-    shared_scratch_dir = "{}/sge/scratch".format(BASE_DIR)
-    local_storage_dir = "{}/sge/storage".format(BASE_DIR)
-    sge = Site(cluster_name) \
-        .add_directories(
-        Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
-        .add_file_servers(
-            FileServer("file://" + shared_scratch_dir, Operation.ALL))) \
-        .add_condor_profile(grid_resource="batch sge") \
-        .add_pegasus_profile(
-        style="glite",
-        queue="all.q",
-        data_configuration="nonsharedfs",
-        auxillary_local="true",
-        nodes=1,
-        ppn=1,
-        runtime=1800,
-        clusters_num=2
-    )
-    sc.add_sites(sge)
 
     # --- Workflow -----------------------------------------------------
     # track the raw inputs for the workflow in the replica catalog.
