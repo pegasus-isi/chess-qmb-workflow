@@ -26,7 +26,7 @@ CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/pegasus-5.0.7dev"
 def build_site_catalog():
     '''
     Builds the Site Catalog that tells Pegasus what cluster layout looks like
-    
+
     :return: the Site Catalog
     '''
 
