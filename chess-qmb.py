@@ -12,6 +12,7 @@ import logging
 import os
 import shutil
 import sys
+import json
 
 from Pegasus.api import *
 
@@ -22,6 +23,7 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 PEGASUS_HOME = shutil.which('pegasus-version')
 PEGASUS_HOME = os.path.dirname(os.path.dirname(PEGASUS_HOME))
 CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/pegasus-5.0.7dev"
+RUN_CONFIG= "run.config"
 
 def build_site_catalog():
     '''
@@ -75,15 +77,39 @@ def generate_wf():
     '''
 
     parser = argparse.ArgumentParser(description="generate a CHESS QMB workflow")
-    parser.add_argument('--execution_site', dest='execution_site', default="condorpool", required=False,
+    parser.add_argument('--execution-site', dest='execution_site', default="condorpool", required=False,
                         help='the site on which you want to run your workflows (condorpool|sge). defaults to condorpool')
+    parser.add_argument('--raw-base-dir', dest='raw_base_dir', required=True,
+                        help='the base directory where your raw cbf files are organized. This is the path to proj-name dir e.g. /nfs/chess/id4b/2024-1/ramshaw-3435-b')
+    parser.add_argument('--calibration-base-dir', dest='calibration_base_dir', required=True,
+                        help='the base directory where your calibration files are. The is path to the parent dir of the calibrations dir e.g. /nfs/chess/id4baux/2024-1/ramshaw-3435-b')
     args = parser.parse_args(sys.argv[1:])
+
+    # pick up the run.config file
+    config = json.load(open(RUN_CONFIG))
     
     wf = Workflow('chess-qmb')
     sc = build_site_catalog()
     tc = TransformationCatalog()
     rc = ReplicaCatalog()
 
+    #name of the experiment, and run cycle
+    #proj_name="ramshaw-3435-b"
+    #run_cycle="2024-1"
+
+    # pick up some qmb specific parameters from run.config
+    specfile = config["specfile"]
+    sample = config["sample"]
+    scan_num = config["scan_num"]
+    temperature = config["temperature"]
+
+    # Where are those detector images?
+    cbf_lfn_prefix = "raw6M/"+specfile+"/"+sample+"/"+temperature+"/"+specfile+"_"+str(scan_num).zfill(3)
+    scan_dir=os.path.join(args.raw_base_dir, cbf_lfn_prefix)
+
+    # Where are the calibrations files
+    calibration_lfn_prefix = "calibrations"
+    calibration_dir = os.path.join(args.calibration_base_dir, calibration_lfn_prefix)
     
     # --- Properties ----------------------------------------------------------
     
@@ -140,28 +166,35 @@ def generate_wf():
     # track the raw inputs for the workflow in the replica catalog.
     # we assume they are in the input directory
     executables_dir = os.path.join(BASE_DIR, "executables")
-    input_dir = os.path.join(BASE_DIR, "input")
+
+    # track all the scan files 
     scan_files=[]
-    for fname in os.listdir(input_dir):
+    for fname in os.listdir(scan_dir):
         if fname[0] == '.':
             continue
 
-        folder = os.path.join(input_dir, fname)
-        prefix = fname
-        if os.path.isdir(folder):
-            for f in os.listdir(folder):
-                if f == '.':
-                    continue
+        file_path = os.path.join(scan_dir, fname) 
+        scan_file = File(cbf_lfn_prefix + "/" + fname)
+        scan_files.append(scan_file)
+        rc.add_replica("local", scan_file, file_path)  
 
-                file_path = os.path.join(folder, f)
-                if os.path.isfile(file_path):
-                    scan_file = File(prefix + "/" + f)
-                    scan_files.append(scan_file)
-                    rc.add_replica("local", scan_file, file_path)
+    calibration_files=[]
+    for fname in os.listdir(calibration_dir):
+        if fname[0] == '.':
+            continue
 
-    # sanity check. make sure scan files were found
+        file_path = os.path.join(scan_dir, fname)
+        calibration_file = File(calibration_lfn_prefix + "/" + fname)
+        calibration_files.append(calibration_file)
+        rc.add_replica("local", calibration_file, file_path)
+    
+    # sanity check. make sure scan and calibration files were found
     if len(scan_files) == 0:
-        logging.error("No scan files found in {}".format(input_dir))
+        logging.error("No scan files found in {}".format(scan_dir))
+        sys.exit(1)
+
+    if len(calibration_files) == 0:
+        logging.error("No calibration files found in {}".format(calibration_dir))
         sys.exit(1)
 
 
@@ -170,10 +203,13 @@ def generate_wf():
     stack2_nxs = File("Stack2.nxs")
     stack3_nxs = File("Stack3.nxs")
     stack_em_all_cbf_job = Job('stack_em_all_cbf', node_label="stack_em_all _cbf_2023")
-    stack_em_all_cbf_job.add_args("-a stack -T60 -i")
+    
+    for calibration_file in calibration_files:
+        stack_em_all_cbf_job.add_inputs(calibration_file)
+        
     for scan_file in scan_files:
-        stack_em_all_cbf_job.add_args(scan_file)
         stack_em_all_cbf_job.add_inputs(scan_file)
+
     stack_em_all_cbf_job.add_args("-o", stack1_nxs, stack2_nxs, stack3_nxs)
     stack_em_all_cbf_job.add_outputs(stack1_nxs, stack2_nxs, stack3_nxs, stage_out=True)
     wf.add_jobs(stack_em_all_cbf_job)
