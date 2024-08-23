@@ -118,6 +118,7 @@ def generate_wf():
     props = Properties()
     props['pegasus.catalog.workflow.amqp.url'] = 'amqp://friend:donatedata@msgs.pegasus.isi.edu:5672/prod/workflows'
     props['pegasus.mode'] = 'development'
+    props['pegasus.transfer.links'] = 'True'
     #props['pegasus.data.configuration'] = 'nonsharedfs'
     props.write() 
     
@@ -134,6 +135,7 @@ def generate_wf():
         pfn=CLUSTER_PEGASUS_HOME + '/bin/pegasus-keg',
         is_stageable=False
     )
+    stack_em_all_cbf.add_pegasus_profile(memory="350GB")
     tc.add_transformations(stack_em_all_cbf)
 
     simple_peakfinder = Transformation(
@@ -176,7 +178,7 @@ def generate_wf():
         file_path = os.path.join(scan_dir, fname) 
         scan_file = File(cbf_lfn_prefix + "/" + fname)
         scan_files.append(scan_file)
-        rc.add_replica("local", scan_file, file_path)  
+        rc.add_replica("sge", scan_file, file_path)  
 
     calibration_files=[]
     for fname in os.listdir(calibration_dir):
@@ -186,7 +188,7 @@ def generate_wf():
         file_path = os.path.join(scan_dir, fname)
         calibration_file = File(calibration_lfn_prefix + "/" + fname)
         calibration_files.append(calibration_file)
-        rc.add_replica("local", calibration_file, file_path)
+        rc.add_replica("sge", calibration_file, file_path)
     
     # sanity check. make sure scan and calibration files were found
     if len(scan_files) == 0:
