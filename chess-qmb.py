@@ -185,7 +185,7 @@ def generate_wf():
         if fname[0] == '.':
             continue
 
-        file_path = os.path.join(scan_dir, fname)
+        file_path = os.path.join(calibration_dir, fname)
         calibration_file = File(calibration_lfn_prefix + "/" + fname)
         calibration_files.append(calibration_file)
         rc.add_replica("sge", calibration_file, file_path)
