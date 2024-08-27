@@ -188,6 +188,10 @@ def generate_wf():
         calibration_file = File(calibration_lfn_prefix + "/" + fname)
         calibration_files.append(calibration_file)
         rc.add_replica("sge", calibration_file, file_path)
+
+    # track the spec file too as input from the raw base dir
+    spec_file = File(specfile)
+    rc.add_replica("sge", spec_file, os.path.join(args.raw_base_dir, specfile))
     
     # sanity check. make sure scan and calibration files were found
     if len(scan_files) == 0:
@@ -211,6 +215,7 @@ def generate_wf():
     for scan_file in scan_files:
         stack_em_all_cbf_job.add_inputs(scan_file)
 
+    stack_em_all_cbf_job.add_inputs(spec_file)
     stack_em_all_cbf_job.add_args(".", ".", ".")
     stack_em_all_cbf_job.add_outputs(stack1_nxs, stack2_nxs, stack3_nxs, stage_out=True)
     wf.add_jobs(stack_em_all_cbf_job)
