@@ -59,7 +59,7 @@ def build_site_catalog():
         .add_condor_profile(grid_resource="batch sge") \
         .add_pegasus_profile(
         style="glite",
-        queue="all.q",
+        queue="chess.q",
         data_configuration="nonsharedfs",
         auxillary_local="true",
         nodes=1,
@@ -128,11 +128,11 @@ def generate_wf():
     wf.add_shell_hook(EventType.ALL, '{}/share/pegasus/notification/email'.format(PEGASUS_HOME))
     
     # --- Transformations -----------------------------------------------------
-
+    executables_dir = os.path.join(BASE_DIR, "executables")
     stack_em_all_cbf = Transformation(
         'stack_em_all_cbf',
         site='sge',
-        pfn=CLUSTER_PEGASUS_HOME + '/bin/pegasus-keg',
+        pfn=executables_dir + '/' + 'stack_em_all_cbf_2023.sh',
         is_stageable=False
     )
     stack_em_all_cbf.add_pegasus_profile(memory="350GB")
@@ -167,7 +167,6 @@ def generate_wf():
     # --- Workflow -----------------------------------------------------
     # track the raw inputs for the workflow in the replica catalog.
     # we assume they are in the input directory
-    executables_dir = os.path.join(BASE_DIR, "executables")
 
     # track all the scan files 
     scan_files=[]
@@ -212,7 +211,7 @@ def generate_wf():
     for scan_file in scan_files:
         stack_em_all_cbf_job.add_inputs(scan_file)
 
-    stack_em_all_cbf_job.add_args("-o", stack1_nxs, stack2_nxs, stack3_nxs)
+    stack_em_all_cbf_job.add_args(".", ".", ".")
     stack_em_all_cbf_job.add_outputs(stack1_nxs, stack2_nxs, stack3_nxs, stage_out=True)
     wf.add_jobs(stack_em_all_cbf_job)
 
