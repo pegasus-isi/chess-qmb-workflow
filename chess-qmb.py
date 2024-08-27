@@ -50,12 +50,17 @@ def build_site_catalog():
     # add a sge site for CHESS SGE Cluster
     cluster_name = "sge"
     shared_scratch_dir = "{}/sge/scratch".format(BASE_DIR)
+    sge_local_scratch_dir = "{}/sge/local-scratch".format(BASE_DIR)
     local_storage_dir = "{}/sge/storage".format(BASE_DIR)
     sge = Site(cluster_name) \
         .add_directories(
         Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
         .add_file_servers(
-            FileServer("file://" + shared_scratch_dir, Operation.ALL))) \
+            FileServer("file://" + shared_scratch_dir, Operation.ALL)),
+        Directory(Directory.LOCAL_SCRATCH, sge_local_scratch_dir).add_file_servers(
+            FileServer("file://" + sge_local_scratch_dir, Operation.ALL)
+        ),
+        ) \
         .add_condor_profile(grid_resource="batch sge") \
         .add_pegasus_profile(
         style="glite",
@@ -135,7 +140,7 @@ def generate_wf():
         pfn=executables_dir + '/' + 'stack_em_all_cbf_2023.sh',
         is_stageable=False
     )
-    stack_em_all_cbf.add_pegasus_profile(memory="350GB")
+    stack_em_all_cbf.add_pegasus_profile(memory="350GB", runtime=7200)
     tc.add_transformations(stack_em_all_cbf)
 
     simple_peakfinder = Transformation(
