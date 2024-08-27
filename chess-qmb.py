@@ -216,7 +216,7 @@ def generate_wf():
         stack_em_all_cbf_job.add_inputs(scan_file)
 
     stack_em_all_cbf_job.add_inputs(spec_file)
-    stack_em_all_cbf_job.add_args(".", ".", ".")
+    #stack_em_all_cbf_job.add_args(".", ".", ".")
     stack_em_all_cbf_job.add_outputs(stack1_nxs, stack2_nxs, stack3_nxs, stage_out=True)
     wf.add_jobs(stack_em_all_cbf_job)
 
