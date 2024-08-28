@@ -65,13 +65,13 @@ def build_site_catalog():
         .add_pegasus_profile(
         style="glite",
         queue="chess.q",
-        data_configuration="nonsharedfs",
+#        data_configuration="sharedfs",
         auxillary_local="true",
         nodes=1,
         ppn=1,
         runtime=1800,
         clusters_num=2
-    )
+        ).add_env("PEGASUS_HOME", CLUSTER_PEGASUS_HOME)
     sc.add_sites(sge)
     return sc
 
@@ -124,7 +124,7 @@ def generate_wf():
     props['pegasus.catalog.workflow.amqp.url'] = 'amqp://friend:donatedata@msgs.pegasus.isi.edu:5672/prod/workflows'
     props['pegasus.mode'] = 'development'
     props['pegasus.transfer.links'] = 'True'
-    #props['pegasus.data.configuration'] = 'nonsharedfs'
+    props['pegasus.data.configuration'] = 'sharedfs'
     props.write() 
     
     # --- Event Hooks ---------------------------------------------------------
