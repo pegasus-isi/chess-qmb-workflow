@@ -4,7 +4,7 @@
 '''
 Sample Pegasus workflow for doing processing data coming out of
 CHESS Quantum Materials Beamline
-https://github.com/keara-soloway/CHAPBookWorkflows
+
 '''
 
 import argparse
@@ -105,14 +105,10 @@ def generate_wf():
     # pick up some qmb specific parameters from run.config
     specfile = config["specfile"]
     sample = config["sample"]
-    scan_num = config["scan_num"]
+    start_scan_num = int(config["start_scan_num"])
     temperature = config["temperature"]
 
-    # Where are those detector images?
-    cbf_lfn_prefix = "raw6M/"+specfile+"/"+sample+"/"+temperature+"/"+specfile+"_"+str(scan_num).zfill(3)
-    scan_dir=os.path.join(args.raw_base_dir, cbf_lfn_prefix)
-
-    # Where are the calibrations files
+     # Where are the calibrations files
     calibration_lfn_prefix = "calibrations"
     calibration_dir = os.path.join(args.calibration_base_dir, calibration_lfn_prefix)
     
@@ -172,18 +168,6 @@ def generate_wf():
     # --- Workflow -----------------------------------------------------
     # track the raw inputs for the workflow in the replica catalog.
     # we assume they are in the input directory
-
-    # track all the scan files 
-    scan_files=[]
-    for fname in os.listdir(scan_dir):
-        if fname[0] == '.':
-            continue
-
-        file_path = os.path.join(scan_dir, fname) 
-        scan_file = File(cbf_lfn_prefix + "/" + fname)
-        scan_files.append(scan_file)
-        rc.add_replica("sge", scan_file, file_path)  
-
     calibration_files=[]
     for fname in os.listdir(calibration_dir):
         if fname[0] == '.':
@@ -194,42 +178,65 @@ def generate_wf():
         calibration_files.append(calibration_file)
         rc.add_replica("sge", calibration_file, file_path)
 
-    # track the spec file too as input from the raw base dir
-    spec_file = File(specfile)
-    rc.add_replica("sge", spec_file, os.path.join(args.raw_base_dir, specfile))
-    
-    # sanity check. make sure scan and calibration files were found
-    if len(scan_files) == 0:
-        logging.error("No scan files found in {}".format(scan_dir))
-        sys.exit(1)
-
     if len(calibration_files) == 0:
         logging.error("No calibration files found in {}".format(calibration_dir))
         sys.exit(1)
 
+    count = 0
+    stack_nxs_files = []
+    for scan_num in range(start_scan_num, start_scan_num + 3):
+        count += 1
+        # Where are those detector images?
+        cbf_lfn_prefix = "raw6M/"+specfile+"/"+sample+"/"+temperature+"/"+specfile+"_"+str(scan_num).zfill(3)
+        scan_dir=os.path.join(args.raw_base_dir, cbf_lfn_prefix)
+        print("Looking up scan files in {}".format(scan_dir))
+              
+        # track all the scan files 
+        scan_files = []
+        for fname in os.listdir(scan_dir):
+            if fname[0] == '.':
+                continue
 
-    # stack_em_all_cbf job
-    stack1_nxs = File("Stack1.nxs")
-    stack2_nxs = File("Stack2.nxs")
-    stack3_nxs = File("Stack3.nxs")
-    stack_em_all_cbf_job = Job('stack_em_all_cbf', node_label="stack_em_all _cbf_2023")
+            file_path = os.path.join(scan_dir, fname) 
+            scan_file = File(cbf_lfn_prefix + "/" + fname)
+            scan_files.append(scan_file)
+            rc.add_replica("sge", scan_file, file_path)  
+
+ 
+        # sanity check. make sure scan and calibration files were found
+        if len(scan_files) == 0:
+            logging.error("No scan files found in {}".format(scan_dir))
+            sys.exit(1)
+            
+        # track the spec file too as input from the raw base dir
+        spec_file = File(specfile)
+        rc.add_replica("sge", spec_file, os.path.join(args.raw_base_dir, specfile))
     
-    for calibration_file in calibration_files:
-        stack_em_all_cbf_job.add_inputs(calibration_file)
+        # stack_em_all_cbf job
+        stack_nxs_file = File("Stack{}.nxs".format(count))
+        stack_nxs_files.append(stack_nxs_file)
+        stack_em_all_cbf_job = Job('stack_em_all_cbf', node_label="stack_em_all _cbf_2023")
+    
+        for calibration_file in calibration_files:
+            stack_em_all_cbf_job.add_inputs(calibration_file)
         
-    for scan_file in scan_files:
-        stack_em_all_cbf_job.add_inputs(scan_file)
+        for scan_file in scan_files:
+            stack_em_all_cbf_job.add_inputs(scan_file)
 
-    stack_em_all_cbf_job.add_inputs(spec_file)
-    #stack_em_all_cbf_job.add_args(".", ".", ".")
-    stack_em_all_cbf_job.add_outputs(stack1_nxs, stack2_nxs, stack3_nxs, stage_out=True)
-    wf.add_jobs(stack_em_all_cbf_job)
+        stack_em_all_cbf_job.add_inputs(spec_file)
+        #stack_em_all_cbf_job.add_args(".", ".", ".")
+        stack_em_all_cbf_job.add_outputs(stack_nxs_file, stage_out=True)
+        wf.add_jobs(stack_em_all_cbf_job)
 
     # simple peakfinder job
     peaklist1_nxs = File("Peaklist1.nxs")
     simple_peakfinder_job = Job('simple_peakfinder', node_label="simple_peakfinder")
-    simple_peakfinder_job.add_args("-a simple_peakfinder -T60 -i", stack1_nxs, "-o", peaklist1_nxs)
-    simple_peakfinder_job.add_inputs(stack1_nxs)
+    simple_peakfinder_job.add_args("-a simple_peakfinder -T60 ", "-o", peaklist1_nxs)
+
+    for stack_nxs in stack_nxs_files:
+        simple_peakfinder_job.add_args("-i", stack_nxs)
+        simple_peakfinder_job.add_inputs(stack_nxs)
+              
     simple_peakfinder_job.add_outputs(peaklist1_nxs, stage_out=True)
     wf.add_jobs(simple_peakfinder_job)
 
@@ -244,9 +251,11 @@ def generate_wf():
     # the mpil6M_hkl_conv job
     three_scans_hkli_nxs = File("3scans_HKLI.nxs")
     pil6M_hkl_conv_job = Job('pil6M_hkl_conv', node_label="pil6M_hkl_conv_3d_2023")
-    pil6M_hkl_conv_job.add_inputs(ormatrix_v1_nxs, stack1_nxs, stack2_nxs, stack3_nxs)
     pil6M_hkl_conv_job.add_args("-a pil6M_hkl_conv -T60 -i")
-    for file in [stack1_nxs, stack2_nxs, stack3_nxs, ormatrix_v1_nxs]:
+    for stack_nxs in stack_nxs_files:
+        pil6M_hkl_conv_job.add_args("-i", stack_nxs)
+        pil6M_hkl_conv_job.add_inputs(stack_nxs)
+    for file in [ormatrix_v1_nxs]:
         pil6M_hkl_conv_job.add_args(file)
     pil6M_hkl_conv_job.add_args("-o", three_scans_hkli_nxs)
     pil6M_hkl_conv_job.add_outputs(three_scans_hkli_nxs, stage_out=True)
