@@ -223,8 +223,10 @@ def generate_wf():
         for scan_file in scan_files:
             stack_em_all_cbf_job.add_inputs(scan_file)
 
+        #options are: scan_number, input-dir, calibration-dir, output-dir, output_nexus_filename
+        stack_em_all_cbf_job.add_args(scan_num, ".", ".", ".", stack_nxs_file)
         stack_em_all_cbf_job.add_inputs(spec_file)
-        #stack_em_all_cbf_job.add_args(".", ".", ".")
+        
         stack_em_all_cbf_job.add_outputs(stack_nxs_file, stage_out=True)
         wf.add_jobs(stack_em_all_cbf_job)
 
