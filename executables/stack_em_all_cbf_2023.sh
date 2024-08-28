@@ -10,11 +10,7 @@ args=("$@")
 # clear the params
 set --
 
-for str in ${args[@]}; do
-  echo $str
-done
-
 source /nfs/chess/sw/anaconda3_jpcr/bin/activate
 
-set -x
+#set -x
 python /nfs/chess/user/kvahi/work/chess-qmb-workflow/code/stack_em_all_cbf_2023.py ${args[@]}
