@@ -121,6 +121,8 @@ def generate_wf():
     props['pegasus.mode'] = 'development'
     props['pegasus.transfer.links'] = 'True'
     props['pegasus.data.configuration'] = 'sharedfs'
+    # throttle stack jobs
+    props['dagman.stack.maxjobs'] = '1'
     props.write() 
     
     # --- Event Hooks ---------------------------------------------------------
@@ -213,7 +215,7 @@ def generate_wf():
         rc.add_replica("sge", spec_file, os.path.join(args.raw_base_dir, specfile))
     
         # stack_em_all_cbf job
-        stack_nxs_file = File("Stack{}.nxs".format(count))
+        stack_nxs_file = File("stack{}.nxs".format(count))
         stack_nxs_files.append(stack_nxs_file)
         stack_em_all_cbf_job = Job('stack_em_all_cbf', node_label="stack_em_all _cbf_2023")
     
@@ -226,12 +228,15 @@ def generate_wf():
         #options are: scan_number, input-dir, calibration-dir, output-dir, output_nexus_filename
         stack_em_all_cbf_job.add_args(scan_num, ".", ".", ".", stack_nxs_file)
         stack_em_all_cbf_job.add_inputs(spec_file)
+
+        # associate category to enable throttling
+        stack_em_all_cbf_job.add_dagman_profile(category="stack")
         
         stack_em_all_cbf_job.add_outputs(stack_nxs_file, stage_out=True)
         wf.add_jobs(stack_em_all_cbf_job)
 
     # simple peakfinder job
-    peaklist1_nxs = File("Peaklist1.nxs")
+    peaklist1_nxs = File("peaklist1.nxs")
     simple_peakfinder_job = Job('simple_peakfinder', node_label="simple_peakfinder")
     simple_peakfinder_job.add_args("-a simple_peakfinder -T60 ", "-o", peaklist1_nxs)
 
