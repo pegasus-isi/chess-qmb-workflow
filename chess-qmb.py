@@ -148,6 +148,7 @@ def generate_wf():
         pfn=executables_dir + '/' + 'simple_peakfinder.sh',
         is_stageable=False
     )
+    simple_peakfinder.add_pegasus_profile(memory="1GB", runtime=1800)
     tc.add_transformations(simple_peakfinder)
 
     auto_ormfinder = Transformation(
