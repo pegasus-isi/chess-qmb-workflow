@@ -121,7 +121,7 @@ def generate_wf():
     props['pegasus.mode'] = 'development'
     props['pegasus.transfer.links'] = 'True'
     props['pegasus.data.configuration'] = 'sharedfs'
-    props['pegasus.catalog.replica.directory.site'] = 'sge'
+    #props['pegasus.catalog.replica.directory.site'] = 'sge'
     # throttle stack jobs
     props['dagman.stack.maxjobs'] = '1'
     props.write() 
@@ -279,7 +279,9 @@ def generate_wf():
         wf.add_site_catalog(sc)
         wf.add_replica_catalog(rc)
         wf.write()
-        wf.plan( sites=[args.execution_site], input_dirs=["./input"], verbose=3, submit=True)
+        wf.plan( sites=[args.execution_site],
+                 #input_dirs=["./input"],
+                 verbose=3, submit=True)
     except PegasusClientError as e:
         print(e.output)
 
