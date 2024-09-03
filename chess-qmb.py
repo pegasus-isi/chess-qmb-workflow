@@ -98,6 +98,9 @@ def generate_wf():
     tc = TransformationCatalog()
     rc = ReplicaCatalog()
 
+    run_config_file = File(RUN_CONFIG)
+    rc.add_replica("sge", run_config_file, os.path.abspath(RUN_CONFIG))
+    
     #name of the experiment, and run cycle
     #proj_name="ramshaw-3435-b"
     #run_cycle="2024-1"
@@ -148,15 +151,16 @@ def generate_wf():
         pfn=executables_dir + '/' + 'simple_peakfinder.sh',
         is_stageable=False
     )
-    simple_peakfinder.add_pegasus_profile(memory="1GB", runtime=1800)
+    simple_peakfinder.add_pegasus_profile(memory="10GB", runtime=1800)
     tc.add_transformations(simple_peakfinder)
 
     auto_ormfinder = Transformation(
         'auto_ormfinder',
         site='sge',
-        pfn=CLUSTER_PEGASUS_HOME + '/bin/pegasus-keg',
+        pfn=executables_dir + '/' + 'auto_ormfinder.sh',
         is_stageable=False
     )
+    auto_ormfinder.add_pegasus_profile(memory="10GB", runtime=3600)
     tc.add_transformations(auto_ormfinder)
 
     pil6M_hkl_conv = Transformation(
@@ -251,8 +255,9 @@ def generate_wf():
     # auto orm finder job
     ormatrix_v1_nxs = File("ormatrix_v1.nxs")
     auto_ormfinder_job = Job('auto_ormfinder', node_label="auto_ormfinder")
-    auto_ormfinder_job.add_args("-a auto_ormfinder -T60 -i", peaklist1_nxs, "-o", ormatrix_v1_nxs)
-    auto_ormfinder_job.add_inputs(peaklist1_nxs)
+    # ./executables/auto_ormfinder.sh . peaklist1.npy run.config
+    auto_ormfinder_job.add_args(".", peaklist1_nxs, run_config_file)
+    auto_ormfinder_job.add_inputs(peaklist1_nxs, run_config_file)
     auto_ormfinder_job.add_outputs(ormatrix_v1_nxs, stage_out=True)
     wf.add_jobs(auto_ormfinder_job)
 
