@@ -144,7 +144,7 @@ def generate_wf():
     simple_peakfinder = Transformation(
         'simple_peakfinder',
         site='sge',
-        pfn=CLUSTER_PEGASUS_HOME + '/bin/pegasus-keg',
+        pfn=executables_dir + '/' + 'simple_peakfinder.sh',
         is_stageable=False
     )
     tc.add_transformations(simple_peakfinder)
@@ -238,7 +238,7 @@ def generate_wf():
     # simple peakfinder job
     peaklist1_nxs = File("peaklist1.nxs")
     simple_peakfinder_job = Job('simple_peakfinder', node_label="simple_peakfinder")
-    simple_peakfinder_job.add_args("-a simple_peakfinder -T60 ", "-o", peaklist1_nxs)
+    simple_peakfinder_job.add_args(". 0.95")
 
     for stack_nxs in stack_nxs_files:
         simple_peakfinder_job.add_args("-i", stack_nxs)
