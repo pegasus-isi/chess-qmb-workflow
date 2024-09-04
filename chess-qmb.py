@@ -249,7 +249,7 @@ def generate_wf():
     for stack_nxs in stack_nxs_files:
         simple_peakfinder_job.add_inputs(stack_nxs)
               
-    simple_peakfinder_job.add_outputs(peaklist1_nxs, stage_out=True)
+    simple_peakfinder_job.add_outputs(peaklist1_npy, stage_out=True)
     wf.add_jobs(simple_peakfinder_job)
 
     # auto orm finder job
@@ -285,7 +285,7 @@ def generate_wf():
         wf.add_replica_catalog(rc)
         wf.write()
         wf.plan( sites=[args.execution_site],
-                 #input_dirs=["./input"],
+#                 input_dirs=["./input"],
                  verbose=3, submit=True)
     except PegasusClientError as e:
         print(e.output)
