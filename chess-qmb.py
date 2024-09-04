@@ -166,9 +166,10 @@ def generate_wf():
     pil6M_hkl_conv = Transformation(
         'pil6M_hkl_conv',
         site='sge',
-        pfn=CLUSTER_PEGASUS_HOME + '/bin/pegasus-keg',
+        pfn=executables_dir + '/' + 'pil6M_hkl_conv.sh',
         is_stageable=False
     )
+    pil6M_hkl_conv.add_pegasus_profile(memory="350GB", runtime=7200)
     tc.add_transformations(pil6M_hkl_conv)
 
 
@@ -264,13 +265,11 @@ def generate_wf():
     # the mpil6M_hkl_conv job
     three_scans_hkli_nxs = File("3scans_HKLI.nxs")
     pil6M_hkl_conv_job = Job('pil6M_hkl_conv', node_label="pil6M_hkl_conv_3d_2023")
-    pil6M_hkl_conv_job.add_args("-a pil6M_hkl_conv -T60 -i")
+    # work-dir where the stack[1-3].nxs are, project dir, sample-dir and the temperature
+    pil6M_hkl_conv_job.add_args(".").add_args(args.raw_base_dir).add_args(specfile+'/'+sample).add_args(temperature)
     for stack_nxs in stack_nxs_files:
-        pil6M_hkl_conv_job.add_args("-i", stack_nxs)
         pil6M_hkl_conv_job.add_inputs(stack_nxs)
-    for file in [ormatrix_v1_nxs]:
-        pil6M_hkl_conv_job.add_args(file)
-    pil6M_hkl_conv_job.add_args("-o", three_scans_hkli_nxs)
+        
     pil6M_hkl_conv_job.add_outputs(three_scans_hkli_nxs, stage_out=True)
     wf.add_jobs(pil6M_hkl_conv_job)
 
