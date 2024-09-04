@@ -242,7 +242,7 @@ def generate_wf():
         wf.add_jobs(stack_em_all_cbf_job)
 
     # simple peakfinder job
-    peaklist1_nxs = File("peaklist1.nxs")
+    peaklist1_npy = File("peaklist1.npy")
     simple_peakfinder_job = Job('simple_peakfinder', node_label="simple_peakfinder")
     simple_peakfinder_job.add_args(". 0.95")
 
@@ -256,8 +256,8 @@ def generate_wf():
     ormatrix_v1_nxs = File("ormatrix_v1.nxs")
     auto_ormfinder_job = Job('auto_ormfinder', node_label="auto_ormfinder")
     # ./executables/auto_ormfinder.sh . peaklist1.npy run.config
-    auto_ormfinder_job.add_args(".", peaklist1_nxs, run_config_file)
-    auto_ormfinder_job.add_inputs(peaklist1_nxs, run_config_file)
+    auto_ormfinder_job.add_args(".", peaklist1_npy, run_config_file)
+    auto_ormfinder_job.add_inputs(peaklist1_npy, run_config_file)
     auto_ormfinder_job.add_outputs(ormatrix_v1_nxs, stage_out=True)
     wf.add_jobs(auto_ormfinder_job)
 
