@@ -269,7 +269,7 @@ def generate_wf():
     pil6M_hkl_conv_job.add_args(".").add_args(args.raw_base_dir).add_args(specfile+'/'+sample).add_args(temperature)
     for stack_nxs in stack_nxs_files:
         pil6M_hkl_conv_job.add_inputs(stack_nxs)
-        
+    pil6M_hkl_conv_job.add_inputs(ormatrix_v1_nxs)
     pil6M_hkl_conv_job.add_outputs(three_scans_hkli_nxs, stage_out=True)
     wf.add_jobs(pil6M_hkl_conv_job)
 
