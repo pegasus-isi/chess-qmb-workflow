@@ -24,6 +24,7 @@ PEGASUS_HOME = shutil.which('pegasus-version')
 PEGASUS_HOME = os.path.dirname(os.path.dirname(PEGASUS_HOME))
 CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/pegasus-5.0.7dev"
 RUN_CONFIG = "run.config"
+RUN_CONFIG_PARAMETERS = ["specfile", "sample", "start_scan_num", "temperature", "a", "b", "c", "alpha", "beta", "gamma"]
 
 
 def build_site_catalog():
@@ -83,25 +84,27 @@ def generate_wf():
     workflow
     '''
 
-    parser = argparse.ArgumentParser(description="generate a CHESS QMB workflow")
+    parser = argparse.ArgumentParser(description="generate a Pegasus CHESS QMB workflow")
     parser.add_argument('--execution-site', dest='execution_site', default="condorpool", required=False,
                         help='the site on which you want to run your workflows (condorpool|sge). defaults to condorpool')
     parser.add_argument('--raw-base-dir', dest='raw_base_dir', required=True,
-                        help='the base directory where your raw cbf files are organized. This is the path to proj-name dir e.g. /nfs/chess/id4b/2024-1/ramshaw-3435-b')
+                        help='the base directory where your raw cbf files are organized. This is the path to '
+                             'proj-name dir e.g. /nfs/chess/id4b/2024-1/ramshaw-3435-b')
     parser.add_argument('--calibration-base-dir', dest='calibration_base_dir', required=True,
-                        help='the base directory where your calibration files are. The is path to the parent dir of the calibrations dir e.g. /nfs/chess/id4baux/2024-1/ramshaw-3435-b')
+                        help='the base directory where your calibration files are. The is path to the parent dir of '
+                             'the calibrations dir e.g. /nfs/chess/id4baux/2024-1/ramshaw-3435-b')
+    parser.add_argument('--run-config', dest='run_config', default=RUN_CONFIG,
+                        help='the configuration file for your run. This is a json file that has the various science '
+                             'parameters in. A default run file can be found in {}'.format(RUN_CONFIG))
     args = parser.parse_args(sys.argv[1:])
 
     # pick up the run.config file
-    config = json.load(open(RUN_CONFIG))
-
-    wf = Workflow('chess-qmb')
-    sc = build_site_catalog()
-    tc = TransformationCatalog()
-    rc = ReplicaCatalog()
-
-    run_config_file = File(RUN_CONFIG)
-    rc.add_replica("sge", run_config_file, os.path.abspath(RUN_CONFIG))
+    config = json.load(open(args.run_config))
+    # check for values in config
+    for key in RUN_CONFIG_PARAMETERS:
+        if key not in config:
+            logging.error("The key {} not found in {} -> {}".format(key, run_config, config))
+            sys.exit(1)
 
     # name of the experiment, and run cycle
     # proj_name="ramshaw-3435-b"
@@ -112,6 +115,14 @@ def generate_wf():
     sample = config["sample"]
     start_scan_num = int(config["start_scan_num"])
     temperature = config["temperature"]
+
+    wf = Workflow('chess-qmb')
+    sc = build_site_catalog()
+    tc = TransformationCatalog()
+    rc = ReplicaCatalog()
+
+    run_config_file = File(args.run_config)
+    rc.add_replica("sge", run_config_file, os.path.abspath(args.run_config))
 
     # Where are the calibrations files
     calibration_lfn_prefix = "calibrations"
