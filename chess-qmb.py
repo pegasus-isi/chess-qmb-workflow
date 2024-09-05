@@ -25,7 +25,7 @@ PEGASUS_HOME = os.path.dirname(os.path.dirname(PEGASUS_HOME))
 CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/pegasus-5.0.7dev"
 RUN_CONFIG = "run.config"
 RUN_CONFIG_PARAMETERS = ["specfile", "sample", "start_scan_num", "temperature", "proj_name", "run_cycle", "a",
-                         "b", "c", "alpha", "beta", "gamma"]
+                         "b", "c", "alpha", "beta", "gamma", "percofmax"]
 
 
 def build_site_catalog():
@@ -116,6 +116,7 @@ def generate_wf():
     sample = config["sample"]
     start_scan_num = int(config["start_scan_num"])
     temperature = config["temperature"]
+    percofmax = config["percofmax"]
 
     wf = Workflow('chess-qmb')
     sc = build_site_catalog()
@@ -263,7 +264,9 @@ def generate_wf():
     # simple peakfinder job
     peaklist1_npy = File("peaklist1.npy")
     simple_peakfinder_job = Job('simple_peakfinder', node_label="simple_peakfinder")
-    simple_peakfinder_job.add_args(". 0.95")
+    simple_peakfinder_job.add_args("--percofmax", percofmax)
+    simple_peakfinder_job.add_args("--input-dir", ".")
+    simple_peakfinder_job.add_args("--output-dir", ".")
 
     for stack_nxs in stack_nxs_files:
         simple_peakfinder_job.add_inputs(stack_nxs)
