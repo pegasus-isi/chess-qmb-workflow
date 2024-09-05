@@ -24,7 +24,8 @@ PEGASUS_HOME = shutil.which('pegasus-version')
 PEGASUS_HOME = os.path.dirname(os.path.dirname(PEGASUS_HOME))
 CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/pegasus-5.0.7dev"
 RUN_CONFIG = "run.config"
-RUN_CONFIG_PARAMETERS = ["specfile", "sample", "start_scan_num", "temperature", "a", "b", "c", "alpha", "beta", "gamma"]
+RUN_CONFIG_PARAMETERS = ["specfile", "sample", "start_scan_num", "temperature", "proj_name", "run_cycle", "a",
+                         "b", "c", "alpha", "beta", "gamma"]
 
 
 def build_site_catalog():
@@ -245,13 +246,17 @@ def generate_wf():
         for scan_file in scan_files:
             stack_em_all_cbf_job.add_inputs(scan_file)
 
-        # options are: scan_number, input-dir, calibration-dir, output-dir, output_nexus_filename
-        stack_em_all_cbf_job.add_args(scan_num, ".", ".", ".", stack_nxs_file)
+        # options are:  input-dir, calibration-dir, output-dir, output_nexus_filename, run config file
+        stack_em_all_cbf_job.add_args("--raw-base-dir", ".")
+        stack_em_all_cbf_job.add_args("--calibration-base-dir", ".")
+        stack_em_all_cbf_job.add_args("--output-dir", ".")
+        stack_em_all_cbf_job.add_args("--output-nexus_filename", stack_nxs_file)
+        stack_em_all_cbf_job.add_args("--run-config", run_config_file)
         stack_em_all_cbf_job.add_inputs(spec_file)
 
         # associate category to enable throttling
         stack_em_all_cbf_job.add_dagman_profile(category="stack")
-
+        stack_em_all_cbf_job.add_inputs(run_config_file)
         stack_em_all_cbf_job.add_outputs(stack_nxs_file, stage_out=True)
         wf.add_jobs(stack_em_all_cbf_job)
 
