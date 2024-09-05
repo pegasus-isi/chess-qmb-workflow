@@ -170,6 +170,8 @@ def generate_wf():
         is_stageable=False
     )
     pil6M_hkl_conv.add_pegasus_profile(memory="350GB", runtime=7200)
+    # make sure python logging does not get buffered
+    pil6M_hkl_conv.add_env("PYTHONUNBUFFERED", "1")
     tc.add_transformations(pil6M_hkl_conv)
 
 
