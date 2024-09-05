@@ -23,7 +23,8 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 PEGASUS_HOME = shutil.which('pegasus-version')
 PEGASUS_HOME = os.path.dirname(os.path.dirname(PEGASUS_HOME))
 CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/pegasus-5.0.7dev"
-RUN_CONFIG= "run.config"
+RUN_CONFIG = "run.config"
+
 
 def build_site_catalog():
     '''
@@ -60,20 +61,21 @@ def build_site_catalog():
         Directory(Directory.LOCAL_SCRATCH, sge_local_scratch_dir).add_file_servers(
             FileServer("file://" + sge_local_scratch_dir, Operation.ALL)
         ),
-        ) \
+    ) \
         .add_condor_profile(grid_resource="batch sge") \
         .add_pegasus_profile(
         style="glite",
         queue="chess.q",
-#        data_configuration="sharedfs",
+        #        data_configuration="sharedfs",
         auxillary_local="true",
         nodes=1,
         ppn=1,
         runtime=1800,
         clusters_num=2
-        ).add_env("PEGASUS_HOME", CLUSTER_PEGASUS_HOME)
+    ).add_env("PEGASUS_HOME", CLUSTER_PEGASUS_HOME)
     sc.add_sites(sge)
     return sc
+
 
 def generate_wf():
     '''
@@ -92,7 +94,7 @@ def generate_wf():
 
     # pick up the run.config file
     config = json.load(open(RUN_CONFIG))
-    
+
     wf = Workflow('chess-qmb')
     sc = build_site_catalog()
     tc = TransformationCatalog()
@@ -100,10 +102,10 @@ def generate_wf():
 
     run_config_file = File(RUN_CONFIG)
     rc.add_replica("sge", run_config_file, os.path.abspath(RUN_CONFIG))
-    
-    #name of the experiment, and run cycle
-    #proj_name="ramshaw-3435-b"
-    #run_cycle="2024-1"
+
+    # name of the experiment, and run cycle
+    # proj_name="ramshaw-3435-b"
+    # run_cycle="2024-1"
 
     # pick up some qmb specific parameters from run.config
     specfile = config["specfile"]
@@ -111,12 +113,12 @@ def generate_wf():
     start_scan_num = int(config["start_scan_num"])
     temperature = config["temperature"]
 
-     # Where are the calibrations files
+    # Where are the calibrations files
     calibration_lfn_prefix = "calibrations"
     calibration_dir = os.path.join(args.calibration_base_dir, calibration_lfn_prefix)
-    
+
     # --- Properties ----------------------------------------------------------
-    
+
     # set the concurrency limit for the download jobs, and send some extra usage
     # data to the Pegasus developers
     props = Properties()
@@ -124,16 +126,16 @@ def generate_wf():
     props['pegasus.mode'] = 'development'
     props['pegasus.transfer.links'] = 'True'
     props['pegasus.data.configuration'] = 'sharedfs'
-    #props['pegasus.catalog.replica.directory.site'] = 'sge'
+    # props['pegasus.catalog.replica.directory.site'] = 'sge'
     # throttle stack jobs
     props['dagman.stack.maxjobs'] = '1'
-    props.write() 
-    
+    props.write()
+
     # --- Event Hooks ---------------------------------------------------------
 
     # get emails on all events at the workflow level
     wf.add_shell_hook(EventType.ALL, '{}/share/pegasus/notification/email'.format(PEGASUS_HOME))
-    
+
     # --- Transformations -----------------------------------------------------
     executables_dir = os.path.join(BASE_DIR, "executables")
     stack_em_all_cbf = Transformation(
@@ -174,12 +176,10 @@ def generate_wf():
     pil6M_hkl_conv.add_env("PYTHONUNBUFFERED", "1")
     tc.add_transformations(pil6M_hkl_conv)
 
-
-
     # --- Workflow -----------------------------------------------------
     # track the raw inputs for the workflow in the replica catalog.
     # we assume they are in the input directory
-    calibration_files=[]
+    calibration_files = []
     for fname in os.listdir(calibration_dir):
         if fname[0] == '.':
             continue
@@ -198,49 +198,49 @@ def generate_wf():
     for scan_num in range(start_scan_num, start_scan_num + 3):
         count += 1
         # Where are those detector images?
-        cbf_lfn_prefix = "raw6M/"+specfile+"/"+sample+"/"+temperature+"/"+specfile+"_"+str(scan_num).zfill(3)
-        scan_dir=os.path.join(args.raw_base_dir, cbf_lfn_prefix)
+        cbf_lfn_prefix = "raw6M/" + specfile + "/" + sample + "/" + temperature + "/" + specfile + "_" + str(
+            scan_num).zfill(3)
+        scan_dir = os.path.join(args.raw_base_dir, cbf_lfn_prefix)
         print("Looking up scan files in {}".format(scan_dir))
-              
+
         # track all the scan files 
         scan_files = []
         for fname in os.listdir(scan_dir):
             if fname[0] == '.':
                 continue
 
-            file_path = os.path.join(scan_dir, fname) 
+            file_path = os.path.join(scan_dir, fname)
             scan_file = File(cbf_lfn_prefix + "/" + fname)
             scan_files.append(scan_file)
-            rc.add_replica("sge", scan_file, file_path)  
+            rc.add_replica("sge", scan_file, file_path)
 
- 
-        # sanity check. make sure scan and calibration files were found
+            # sanity check. make sure scan and calibration files were found
         if len(scan_files) == 0:
             logging.error("No scan files found in {}".format(scan_dir))
             sys.exit(1)
-            
+
         # track the spec file too as input from the raw base dir
         spec_file = File(specfile)
         rc.add_replica("sge", spec_file, os.path.join(args.raw_base_dir, specfile))
-    
+
         # stack_em_all_cbf job
         stack_nxs_file = File("stack{}.nxs".format(count))
         stack_nxs_files.append(stack_nxs_file)
         stack_em_all_cbf_job = Job('stack_em_all_cbf', node_label="stack_em_all _cbf_2023")
-    
+
         for calibration_file in calibration_files:
             stack_em_all_cbf_job.add_inputs(calibration_file)
-        
+
         for scan_file in scan_files:
             stack_em_all_cbf_job.add_inputs(scan_file)
 
-        #options are: scan_number, input-dir, calibration-dir, output-dir, output_nexus_filename
+        # options are: scan_number, input-dir, calibration-dir, output-dir, output_nexus_filename
         stack_em_all_cbf_job.add_args(scan_num, ".", ".", ".", stack_nxs_file)
         stack_em_all_cbf_job.add_inputs(spec_file)
 
         # associate category to enable throttling
         stack_em_all_cbf_job.add_dagman_profile(category="stack")
-        
+
         stack_em_all_cbf_job.add_outputs(stack_nxs_file, stage_out=True)
         wf.add_jobs(stack_em_all_cbf_job)
 
@@ -251,7 +251,7 @@ def generate_wf():
 
     for stack_nxs in stack_nxs_files:
         simple_peakfinder_job.add_inputs(stack_nxs)
-              
+
     simple_peakfinder_job.add_outputs(peaklist1_npy, stage_out=True)
     wf.add_jobs(simple_peakfinder_job)
 
@@ -268,7 +268,7 @@ def generate_wf():
     three_scans_hkli_nxs = File("3scans_HKLI.nxs")
     pil6M_hkl_conv_job = Job('pil6M_hkl_conv', node_label="pil6M_hkl_conv_3d_2023")
     # work-dir where the stack[1-3].nxs are, project dir, sample-dir and the temperature
-    pil6M_hkl_conv_job.add_args(".").add_args(args.raw_base_dir).add_args(specfile+'/'+sample).add_args(temperature)
+    pil6M_hkl_conv_job.add_args(".").add_args(args.raw_base_dir).add_args(specfile + '/' + sample).add_args(temperature)
     for stack_nxs in stack_nxs_files:
         pil6M_hkl_conv_job.add_inputs(stack_nxs)
     pil6M_hkl_conv_job.add_inputs(ormatrix_v1_nxs)
@@ -279,19 +279,18 @@ def generate_wf():
     wf.add_dependency(simple_peakfinder_job, parents=[stack_em_all_cbf_job])
     wf.add_dependency(auto_ormfinder_job, parents=[simple_peakfinder_job])
     wf.add_dependency(pil6M_hkl_conv_job, parents=[auto_ormfinder_job, stack_em_all_cbf_job])
-    
+
     try:
         wf.add_transformation_catalog(tc)
         wf.add_site_catalog(sc)
         wf.add_replica_catalog(rc)
         wf.write()
-        wf.plan( sites=[args.execution_site],
-#                 input_dirs=["./input"],
-                 verbose=3, submit=True)
+        wf.plan(sites=[args.execution_site],
+                #                 input_dirs=["./input"],
+                verbose=3, submit=True)
     except PegasusClientError as e:
         print(e.output)
 
 
 if __name__ == '__main__':
     generate_wf()
-
