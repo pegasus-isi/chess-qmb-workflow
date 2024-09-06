@@ -277,7 +277,7 @@ def generate_wf():
     # auto orm finder job
     ormatrix_v1_nxs = File("ormatrix_v1.nxs")
     auto_ormfinder_job = Job('auto_ormfinder', node_label="auto_ormfinder")
-    # ./executables/auto_ormfinder.sh . peaklist1.npy run.config
+
     auto_ormfinder_job.add_args(".", peaklist1_npy, run_config_file)
     auto_ormfinder_job.add_args("--peakfile", peaklist1_npy)
     auto_ormfinder_job.add_args("--input-dir", ".")
@@ -290,8 +290,12 @@ def generate_wf():
     # the mpil6M_hkl_conv job
     three_scans_hkli_nxs = File("3scans_HKLI.nxs")
     pil6M_hkl_conv_job = Job('pil6M_hkl_conv', node_label="pil6M_hkl_conv_3d_2023")
-    # work-dir where the stack[1-3].nxs are, project dir, sample-dir and the temperature
-    pil6M_hkl_conv_job.add_args(".").add_args(args.raw_base_dir).add_args(specfile + '/' + sample).add_args(temperature)
+    # work-dir where the stack[1-3].nxs are
+    pil6M_hkl_conv_job.add_args("--input-dir", ".")
+    pil6M_hkl_conv_job.add_args("--output-dir", ".")
+    pil6M_hkl_conv_job.add_args("--output-nexus_filename", three_scans_hkli_nxs)
+    pil6M_hkl_conv_job.add_args("--temperature", temperature)
+    
     for stack_nxs in stack_nxs_files:
         pil6M_hkl_conv_job.add_inputs(stack_nxs)
     pil6M_hkl_conv_job.add_inputs(ormatrix_v1_nxs)
