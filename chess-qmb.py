@@ -137,7 +137,7 @@ def generate_wf():
     props = Properties()
     props['pegasus.catalog.workflow.amqp.url'] = 'amqp://friend:donatedata@msgs.pegasus.isi.edu:5672/prod/workflows'
     props['pegasus.mode'] = 'development'
-    #props['pegasus.transfer.links'] = 'True'
+    # props['pegasus.transfer.links'] = 'True'
     props['pegasus.transfer.bypass.input.staging'] = 'True'
     props['pegasus.data.configuration'] = 'nonsharedfs'
     # props['pegasus.catalog.replica.directory.site'] = 'sge'
@@ -249,6 +249,7 @@ def generate_wf():
             stack_em_all_cbf_job.add_inputs(scan_file)
 
         # options are:  input-dir, calibration-dir, output-dir, output_nexus_filename, run config file
+        stack_em_all_cbf_job.add_args("--scan-num", str(scan_num))
         stack_em_all_cbf_job.add_args("--raw-base-dir", ".")
         stack_em_all_cbf_job.add_args("--calibration-base-dir", ".")
         stack_em_all_cbf_job.add_args("--output-dir", ".")
@@ -295,7 +296,7 @@ def generate_wf():
     pil6M_hkl_conv_job.add_args("--output-dir", ".")
     pil6M_hkl_conv_job.add_args("--output-nexus_filename", three_scans_hkli_nxs)
     pil6M_hkl_conv_job.add_args("--temperature", temperature)
-    
+
     for stack_nxs in stack_nxs_files:
         pil6M_hkl_conv_job.add_inputs(stack_nxs)
     pil6M_hkl_conv_job.add_inputs(ormatrix_v1_nxs)
