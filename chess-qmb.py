@@ -26,6 +26,7 @@ CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/pegasus-5.0.7dev"
 RUN_CONFIG = "run.config"
 RUN_CONFIG_PARAMETERS = ["specfile", "sample", "start_scan_num", "temperature", "proj_name", "run_cycle", "a",
                          "b", "c", "alpha", "beta", "gamma", "percofmax"]
+DEBUG = False
 
 
 def build_site_catalog():
@@ -59,10 +60,7 @@ def build_site_catalog():
         .add_directories(
         Directory(Directory.SHARED_SCRATCH, shared_scratch_dir)
         .add_file_servers(
-            FileServer("file://" + shared_scratch_dir, Operation.ALL)),
-        Directory(Directory.LOCAL_SCRATCH, sge_local_scratch_dir).add_file_servers(
-            FileServer("file://" + sge_local_scratch_dir, Operation.ALL)
-        ),
+            FileServer("file://" + shared_scratch_dir, Operation.ALL))
     ) \
         .add_condor_profile(grid_resource="batch sge") \
         .add_pegasus_profile(
@@ -75,6 +73,14 @@ def build_site_catalog():
         runtime=1800,
         clusters_num=2
     ).add_env("PEGASUS_HOME", CLUSTER_PEGASUS_HOME)
+
+    if DEBUG:
+        # get Pegasus in nonsharedfs mode to create directories on the shared file system
+        sge.add_directories(
+            Directory(Directory.LOCAL_SCRATCH, sge_local_scratch_dir).add_file_servers(
+                FileServer("file://" + sge_local_scratch_dir, Operation.ALL)
+            ))
+
     sc.add_sites(sge)
     return sc
 
