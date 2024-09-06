@@ -137,8 +137,9 @@ def generate_wf():
     props = Properties()
     props['pegasus.catalog.workflow.amqp.url'] = 'amqp://friend:donatedata@msgs.pegasus.isi.edu:5672/prod/workflows'
     props['pegasus.mode'] = 'development'
-    props['pegasus.transfer.links'] = 'True'
-    props['pegasus.data.configuration'] = 'sharedfs'
+    #props['pegasus.transfer.links'] = 'True'
+    props['pegasus.transfer.bypass.input.staging'] = 'True'
+    props['pegasus.data.configuration'] = 'nonsharedfs'
     # props['pegasus.catalog.replica.directory.site'] = 'sge'
     # throttle stack jobs
     props['dagman.stack.maxjobs'] = '1'
