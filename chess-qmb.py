@@ -279,7 +279,6 @@ def generate_wf():
     ormatrix_v1_nxs = File("ormatrix_v1.nxs")
     auto_ormfinder_job = Job('auto_ormfinder', node_label="auto_ormfinder")
 
-    auto_ormfinder_job.add_args(".", peaklist1_npy, run_config_file)
     auto_ormfinder_job.add_args("--peakfile", peaklist1_npy)
     auto_ormfinder_job.add_args("--input-dir", ".")
     auto_ormfinder_job.add_args("--output-dir", ".")
