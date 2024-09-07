@@ -290,7 +290,7 @@ def generate_wf():
     auto_ormfinder_job.add_args("--input-dir", ".")
     auto_ormfinder_job.add_args("--output-dir", ".")
     auto_ormfinder_job.add_args("--run-config", run_config_file)
-    auto_ormfinder_job.add_inputs(peaklist1_npy, run_config_file)
+    auto_ormfinder_job.add_inputs(File("stack1.nxs"), peaklist1_npy, run_config_file)
     auto_ormfinder_job.add_outputs(ormatrix_v1_nxs, stage_out=True)
     wf.add_jobs(auto_ormfinder_job)
 
