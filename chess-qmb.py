@@ -272,9 +272,10 @@ def generate_wf():
     # simple peakfinder job
     peaklist1_npy = File("peaklist1.npy")
     simple_peakfinder_job = Job('simple_peakfinder', node_label="simple_peakfinder")
-    simple_peakfinder_job.add_args("--percofmax", percofmax)
+    simple_peakfinder_job.add_args("--run-config", run_config_file)
     simple_peakfinder_job.add_args("--input-dir", ".")
     simple_peakfinder_job.add_args("--output-dir", ".")
+    simple_peakfinder_job.add_inputs(run_config_file)
 
     for stack_nxs in stack_nxs_files:
         simple_peakfinder_job.add_inputs(stack_nxs)
@@ -294,7 +295,7 @@ def generate_wf():
     auto_ormfinder_job.add_outputs(ormatrix_v1_nxs, stage_out=True)
     wf.add_jobs(auto_ormfinder_job)
 
-    # the mpil6M_hkl_conv job
+    # the pil6M_hkl_conv job
     three_scans_hkli_nxs = File("3scans_HKLI.nxs")
     pil6M_hkl_conv_job = Job('pil6M_hkl_conv', node_label="pil6M_hkl_conv_3d_2023")
     # work-dir where the stack[1-3].nxs are
@@ -305,7 +306,7 @@ def generate_wf():
 
     for stack_nxs in stack_nxs_files:
         pil6M_hkl_conv_job.add_inputs(stack_nxs)
-    pil6M_hkl_conv_job.add_inputs(ormatrix_v1_nxs)
+    pil6M_hkl_conv_job.add_inputs(peaklist1_npy, ormatrix_v1_nxs)
     pil6M_hkl_conv_job.add_outputs(three_scans_hkli_nxs, stage_out=True)
     wf.add_jobs(pil6M_hkl_conv_job)
 
