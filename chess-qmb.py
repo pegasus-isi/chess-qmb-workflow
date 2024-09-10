@@ -245,7 +245,7 @@ def generate_wf():
 
         # stack_em_all_cbf job
         stack_nxs_file = File("stack{}.nxs".format(count))
-        stack1_nxs_file = stack_nxs_file if count is 1 else stack1_nxs_file
+        stack1_nxs_file = stack_nxs_file if count == 1 else stack1_nxs_file
         stack_nxs_files.append(stack_nxs_file)
         stack_em_all_cbf_job = Job('stack_em_all_cbf', node_label="stack_em_all _cbf_2023")
 
