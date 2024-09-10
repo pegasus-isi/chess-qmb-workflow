@@ -245,6 +245,7 @@ def generate_wf():
 
         # stack_em_all_cbf job
         stack_nxs_file = File("stack{}.nxs".format(count))
+        stack1_nxs_file = stack_nxs_file if count is 1 else stack1_nxs_file
         stack_nxs_files.append(stack_nxs_file)
         stack_em_all_cbf_job = Job('stack_em_all_cbf', node_label="stack_em_all _cbf_2023")
 
@@ -277,8 +278,7 @@ def generate_wf():
     simple_peakfinder_job.add_args("--output-dir", ".")
     simple_peakfinder_job.add_inputs(run_config_file)
 
-    for stack_nxs in stack_nxs_files:
-        simple_peakfinder_job.add_inputs(stack_nxs)
+    simple_peakfinder_job.add_inputs(stack1_nxs_file)
 
     simple_peakfinder_job.add_outputs(peaklist1_npy, stage_out=True)
     wf.add_jobs(simple_peakfinder_job)
@@ -291,7 +291,7 @@ def generate_wf():
     auto_ormfinder_job.add_args("--input-dir", ".")
     auto_ormfinder_job.add_args("--output-dir", ".")
     auto_ormfinder_job.add_args("--run-config", run_config_file)
-    auto_ormfinder_job.add_inputs(File("stack1.nxs"), peaklist1_npy, run_config_file)
+    auto_ormfinder_job.add_inputs(stack1_nxs_file, peaklist1_npy, run_config_file)
     auto_ormfinder_job.add_outputs(ormatrix_v1_nxs, stage_out=True)
     wf.add_jobs(auto_ormfinder_job)
 
