@@ -308,6 +308,11 @@ def generate_wf():
         pil6M_hkl_conv_job.add_inputs(stack_nxs)
     pil6M_hkl_conv_job.add_inputs(peaklist1_npy, ormatrix_v1_nxs)
     pil6M_hkl_conv_job.add_outputs(three_scans_hkli_nxs, stage_out=True)
+
+    # ensure job runs on multiple cores. the hkl library
+    # underneath is multi-threaded 
+    pil6M_hkl_conv_job.add_pegasus_profile(glite_arguments="-pe sge_pe 56")
+    pil6M_hkl_conv_job.add_pegasus_profile(cores="56")
     wf.add_jobs(pil6M_hkl_conv_job)
 
     # add dependencies explicitly to connect the j
