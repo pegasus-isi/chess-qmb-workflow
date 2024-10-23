@@ -12,6 +12,15 @@ $ ssh lnx201.classe.cornell.edu
 $ cd ~/CLASSE_shortcuts/chess_[username]
 $ git clone https://github.com/pegasus-isi/chess-qmb-workflow.git
 ```
+### Check out the codes for the individual jobs
+
+
+``` bash
+$ cd chess-qmb-workflow
+$ git clone https://gitlab01.classe.cornell.edu/ss3428/pegasus.git code
+```
+The above repository is in CLASSE GitLab and you need to do the checkout
+using your Classe account.
 
 ### Submit the workflow 
 
