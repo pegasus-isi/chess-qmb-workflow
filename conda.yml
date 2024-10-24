@@ -16,7 +16,7 @@ dependencies:
   - nexusformat==0.7.6 # can be updated?
   - numpy==1.23.5
   - pyfai==0.21.3
-  - pillow==9.2.0 # provides PIL
+  - pillow==10.4.0 # provides PIL
   - spec2nexus==2021.2.1
   - scipy==1.10.1
 
