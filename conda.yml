@@ -18,5 +18,5 @@ dependencies:
   - pyfai==0.21.3
   - pillow==9.2.0 # provides PIL
   - spec2nexus==2021.2.1
-  - scipy==1.7.3
+  - scipy==1.10.1
 
