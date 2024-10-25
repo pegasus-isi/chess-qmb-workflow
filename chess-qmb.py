@@ -191,7 +191,7 @@ def generate_wf():
         pfn=executables_dir + '/' + 'pil6M_hkl_conv.sh',
         is_stageable=False
     )
-    pil6M_hkl_conv.add_pegasus_profile(memory="350GB", runtime=28800)
+    pil6M_hkl_conv.add_pegasus_profile(memory="350GB", runtime=36000)
     # make sure python logging does not get buffered
     pil6M_hkl_conv.add_env("PYTHONUNBUFFERED", "1")
     tc.add_transformations(pil6M_hkl_conv)
