@@ -1,0 +1,27 @@
+bootstrap:docker
+From:continuumio/miniconda3:main
+
+%environment
+#PATH=/opt/Montage/bin:/usr/bin:/bin
+
+%setup
+
+%post
+
+apt -y update
+apt -y install build-essential
+apt -y install curl
+#apt -y install libtiff5-dev
+
+# Cleaning caches to reduce size of image
+apt-get clean
+
+ln -s /usr/lib/x86_64-linux-gnu/libtiff.so.6 /usr/lib/x86_64-linux-gnu/libtiff.so.5
+
+# checkout out chess qmb wf github repo
+cd /opt \
+    && git clone https://oauth2:{{ gitlab_token }}@gitlab01.classe.cornell.edu/ss3428/pegasus.git qmb-code \
+    && git clone https://github.com/pegasus-isi/chess-qmb-workflow.git \
+    && cd chess-qmb-workflow/ \
+    && conda env create -f conda.yml \
+    
