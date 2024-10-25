@@ -103,6 +103,8 @@ def generate_wf():
     parser.add_argument('--run-config', dest='run_config', default=RUN_CONFIG,
                         help='the configuration file for your run. This is a json file that has the various science '
                              'parameters in. A default run file can be found in {}'.format(RUN_CONFIG))
+    parser.add_argument('--use-container', dest='use_container', default=False,
+                        help='a boolean flag indicating whether the jobs should run in an apptainer container.')
     args = parser.parse_args(sys.argv[1:])
 
     # pick up the run.config file
@@ -157,12 +159,24 @@ def generate_wf():
     wf.add_shell_hook(EventType.ALL, '{}/share/pegasus/notification/email'.format(PEGASUS_HOME))
 
     # --- Transformations -----------------------------------------------------
-    executables_dir = os.path.join(BASE_DIR, "executables")
+    container = Container(
+        'chap',
+        Container.SINGULARITY,
+        'http://data.isi.edu/chess/images/qmb.sif',
+        #        mounts=["{}:/{}/:rw".format(BASE_DIR, BASE_DIR)],
+        image_site="nonlocal"
+    )
+    container.add_env("CONTAINER_EXEC", "true")
+    tc.add_containers(container)
+
+    executables_dir = "/opt/chess-qmb-workflow/executables" if args.use_container else os.path.join(BASE_DIR,
+                                                                                                    "executables")
     stack_em_all_cbf = Transformation(
         'stack_em_all_cbf',
         site='sge',
         pfn=executables_dir + '/' + 'stack_em_all_cbf_2023.sh',
-        is_stageable=False
+        is_stageable=False,
+        container=container if args.use_container else None
     )
     stack_em_all_cbf.add_pegasus_profile(memory="350GB", runtime=7200)
     tc.add_transformations(stack_em_all_cbf)
@@ -171,7 +185,8 @@ def generate_wf():
         'simple_peakfinder',
         site='sge',
         pfn=executables_dir + '/' + 'simple_peakfinder.sh',
-        is_stageable=False
+        is_stageable=False,
+        container=container if args.use_container else None
     )
     simple_peakfinder.add_pegasus_profile(memory="10GB", runtime=1800)
     tc.add_transformations(simple_peakfinder)
@@ -180,7 +195,8 @@ def generate_wf():
         'auto_ormfinder',
         site='sge',
         pfn=executables_dir + '/' + 'auto_ormfinder.sh',
-        is_stageable=False
+        is_stageable=False,
+        container=container if args.use_container else None
     )
     auto_ormfinder.add_pegasus_profile(memory="10GB", runtime=3600)
     tc.add_transformations(auto_ormfinder)
@@ -189,7 +205,8 @@ def generate_wf():
         'pil6M_hkl_conv',
         site='sge',
         pfn=executables_dir + '/' + 'pil6M_hkl_conv.sh',
-        is_stageable=False
+        is_stageable=False,
+        container=container if args.use_container else None
     )
     pil6M_hkl_conv.add_pegasus_profile(memory="350GB", runtime=36000)
     # make sure python logging does not get buffered
