@@ -148,6 +148,7 @@ def generate_wf():
     # props['pegasus.transfer.links'] = 'True'
     props['pegasus.transfer.bypass.input.staging'] = 'True'
     props['pegasus.data.configuration'] = 'nonsharedfs'
+    props['pegasus.transfer.container.onhost'] = 'True'
     # props['pegasus.catalog.replica.directory.site'] = 'sge'
     # throttle stack jobs
     props['dagman.stack.maxjobs'] = '1'
@@ -163,7 +164,7 @@ def generate_wf():
         'chap',
         Container.SINGULARITY,
         'https://download.pegasus.isi.edu/containers/chess/qmb.sif',
-        mounts=["{}:/{}/:rw".format(BASE_DIR, BASE_DIR)],
+        #mounts=["{}:/{}/:rw".format(BASE_DIR, BASE_DIR)],
         image_site="nonlocal"
     )
     container.add_env("CONTAINER_EXEC", "true")
