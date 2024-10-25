@@ -163,7 +163,7 @@ def generate_wf():
         'chap',
         Container.SINGULARITY,
         'https://download.pegasus.isi.edu/containers/chess/qmb.sif',
-        #        mounts=["{}:/{}/:rw".format(BASE_DIR, BASE_DIR)],
+        mounts=["{}:/{}/:rw".format(BASE_DIR, BASE_DIR)],
         image_site="nonlocal"
     )
     container.add_env("CONTAINER_EXEC", "true")
