@@ -103,7 +103,7 @@ def generate_wf():
     parser.add_argument('--run-config', dest='run_config', default=RUN_CONFIG,
                         help='the configuration file for your run. This is a json file that has the various science '
                              'parameters in. A default run file can be found in {}'.format(RUN_CONFIG))
-    parser.add_argument('--use-container', dest='use_container', default=False,
+    parser.add_argument('--use-container', dest='use_container', action='store_true',
                         help='a boolean flag indicating whether the jobs should run in an apptainer container.')
     args = parser.parse_args(sys.argv[1:])
 
