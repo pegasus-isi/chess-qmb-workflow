@@ -10,7 +10,10 @@ args=("$@")
 # clear the params
 set --
 
-source /nfs/chess/sw/anaconda3_jpcr/bin/activate
+#source /nfs/chess/sw/anaconda3_jpcr/bin/activate
+
+source /nfs/chess/user/kvahi/software/conda/etc/profile.d/conda.sh
+conda activate qmb
 
 #set -x
 python /nfs/chess/user/kvahi/work/chess-qmb-workflow/code/stack_em_all_cbf_2023.py ${args[@]}
