@@ -162,7 +162,7 @@ def generate_wf():
     container = Container(
         'chap',
         Container.SINGULARITY,
-        'http://data.isi.edu/chess/images/qmb.sif',
+        'https://download.pegasus.isi.edu/containers/chess/qmb.sif',
         #        mounts=["{}:/{}/:rw".format(BASE_DIR, BASE_DIR)],
         image_site="nonlocal"
     )
