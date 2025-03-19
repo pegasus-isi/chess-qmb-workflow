@@ -231,6 +231,18 @@ def generate_wf():
         logging.error("No calibration files found in {}".format(calibration_dir))
         sys.exit(1)
 
+    # the poni file is already added via the directory traversal as an input
+    # pass the path to it as a command line arg
+    poni_file = None
+    for filename in os.listdir(calibration_dir):
+        if filename.endswith(".poni"):
+            poni_file = calibration_lfn_prefix + "/" + filename
+
+    if poni_file is None:
+        logging.error("No .poni file found in  {}".format(calibration_dir))
+        sys.exit(1)
+
+
     count = 0
     stack_nxs_files = []
     for scan_num in range(start_scan_num, start_scan_num + 3):
@@ -252,7 +264,7 @@ def generate_wf():
             scan_files.append(scan_file)
             rc.add_replica("sge", scan_file, file_path)
 
-            # sanity check. make sure scan and calibration files were found
+        # sanity check. make sure scan and calibration files were found
         if len(scan_files) == 0:
             logging.error("No scan files found in {}".format(scan_dir))
             sys.exit(1)
@@ -273,13 +285,16 @@ def generate_wf():
         for scan_file in scan_files:
             stack_em_all_cbf_job.add_inputs(scan_file)
 
-        # options are:  input-dir, calibration-dir, output-dir, output_nexus_filename, run config file
+        # options are:  input-dir, calibration-dir, output-dir, output_nexus_filename, run config file poni-file
         stack_em_all_cbf_job.add_args("--scan-num", str(scan_num))
         stack_em_all_cbf_job.add_args("--raw-base-dir", ".")
         stack_em_all_cbf_job.add_args("--calibration-base-dir", ".")
         stack_em_all_cbf_job.add_args("--output-dir", ".")
         stack_em_all_cbf_job.add_args("--output-nexus_filename", stack_nxs_file)
         stack_em_all_cbf_job.add_args("--run-config", run_config_file)
+        stack_em_all_cbf_job.add_args("--poni-file", poni_file)
+
+
         stack_em_all_cbf_job.add_inputs(spec_file)
 
         # associate category to enable throttling
