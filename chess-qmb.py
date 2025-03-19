@@ -22,7 +22,8 @@ BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 # need to know where Pegasus is installed for notifications
 PEGASUS_HOME = shutil.which('pegasus-version')
 PEGASUS_HOME = os.path.dirname(os.path.dirname(PEGASUS_HOME))
-CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/pegasus-5.0.7dev"
+#CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/pegasus-5.0.7dev"
+CLUSTER_PEGASUS_HOME = "/nfs/chess/user/kvahi/software/pegasus/default"
 RUN_CONFIG = "run.config"
 RUN_CONFIG_PARAMETERS = ["specfile", "sample", "start_scan_num", "temperature", "proj_name", "run_cycle", "a",
                          "b", "c", "alpha", "beta", "gamma", "percofmax"]
